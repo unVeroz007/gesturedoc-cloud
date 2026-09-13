@@ -1,104 +1,191 @@
-# ai_engine.py — GestureDoc Web v3.0
-# Standalone: tidak ada dependency ke hand_tracker / body_zones
+"""Groq adapter for generic, source-bounded health education content."""
 
+from __future__ import annotations
+
+import json
+import logging
 import os
-from groq import Groq
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
+
 from dotenv import load_dotenv
+from groq import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AuthenticationError,
+    Groq,
+    PermissionDeniedError,
+    RateLimitError,
+)
 
 load_dotenv()
-
-# Deskripsi medis per zona untuk prompt yang lebih akurat
-_ZONE_DESC = {
-    "Kepala":              "kepala dan otak",
-    "Mata Kiri":           "mata kiri",
-    "Mata Kanan":          "mata kanan",
-    "Hidung":              "hidung dan sinus",
-    "Mulut":               "mulut, gigi, dan tenggorokan",
-    "Telinga Kiri":        "telinga kiri",
-    "Telinga Kanan":       "telinga kanan",
-    "Dagu":                "dagu dan rahang",
-    "Leher":               "leher",
-    "Dada & Paru-paru":    "dada dan paru-paru",
-    "Jantung":             "jantung dan sistem kardiovaskular",
-    "Perut":               "perut dan sistem pencernaan",
-    "Pinggul":             "pinggul",
-    "Bahu Kiri":           "bahu kiri",
-    "Bahu Kanan":          "bahu kanan",
-    "Siku Kiri":           "siku kiri",
-    "Siku Kanan":          "siku kanan",
-    "Pergelangan Tangan":  "pergelangan tangan",
-    "Lutut":               "lutut",
-    "Pergelangan Kaki":    "pergelangan kaki dan engkel",
-}
+LOGGER = logging.getLogger("gesturedoc.ai")
+DEFAULT_MODEL = "openai/gpt-oss-20b"
+EXPECTED_FIELDS = frozenset(
+    {"common_conditions", "common_symptoms", "prevention", "seek_care"}
+)
 
 
-def _get_api_key() -> str:
-    """Baca API key: prioritas st.secrets (Streamlit Cloud), fallback env var (lokal)."""
-    # 1. Streamlit Cloud → st.secrets["GROQ_API_KEY"]
+@dataclass(frozen=True)
+class AIServiceError(Exception):
+    category: str
+    public_message: str
+    retry_after_seconds: int | None = None
+
+    def __str__(self) -> str:
+        return self.public_message
+
+
+def get_setting(name: str, default: str = "") -> str:
+    """Read Streamlit secrets first and environment variables second."""
     try:
         import streamlit as st
-        key = st.secrets.get("GROQ_API_KEY", "")
-        if key:
-            return key
-    except Exception:
+
+        value = st.secrets.get(name, "")
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    except (FileNotFoundError, KeyError, RuntimeError):
         pass
-    # 2. Lokal dengan .env → os.getenv
-    return os.getenv("GROQ_API_KEY", "")
+    return os.getenv(name, default).strip()
 
 
 def _make_client() -> Groq:
-    api_key = _get_api_key()
+    api_key = get_setting("GROQ_API_KEY")
     if not api_key:
-        raise ValueError(
-            "GROQ_API_KEY tidak ditemukan!\n"
-            "• Lokal: buat file .env → GROQ_API_KEY=gsk_xxx\n"
-            "• Streamlit Cloud: Settings → Secrets → GROQ_API_KEY = \"gsk_xxx\""
+        raise AIServiceError(
+            "configuration_error",
+            "Layanan AI belum dikonfigurasi. Informasi dasar tetap tersedia.",
         )
-    return Groq(api_key=api_key)
+    try:
+        timeout = float(get_setting("GROQ_TIMEOUT_SECONDS", "10"))
+    except ValueError:
+        timeout = 10.0
+    return Groq(api_key=api_key, timeout=max(3.0, min(timeout, 20.0)), max_retries=0)
+
+
+def _plain_text(value: Any, field: str, *, minimum: int = 8, maximum: int = 600) -> str:
+    if not isinstance(value, str):
+        raise AIServiceError("invalid_response", f"Field {field} tidak berupa teks.")
+    text = re.sub(r"\s+", " ", value).strip()
+    if not minimum <= len(text) <= maximum:
+        raise AIServiceError("invalid_response", f"Panjang field {field} tidak valid.")
+    if re.search(r"<[^>]*>|https?://|\[[^]]+\]\([^)]*\)", text, re.IGNORECASE):
+        raise AIServiceError("invalid_response", f"Field {field} memuat markup atau tautan.")
+    return text
+
+
+def validate_ai_payload(payload: Any) -> dict[str, Any]:
+    if not isinstance(payload, Mapping) or set(payload) != EXPECTED_FIELDS:
+        raise AIServiceError("invalid_response", "Struktur jawaban AI tidak sesuai.")
+    conditions = payload.get("common_conditions")
+    if not isinstance(conditions, list) or not 2 <= len(conditions) <= 3:
+        raise AIServiceError("invalid_response", "Daftar kondisi AI tidak sesuai.")
+    clean_conditions = [
+        _plain_text(item, f"common_conditions[{index}]", minimum=3, maximum=100)
+        for index, item in enumerate(conditions)
+    ]
+    return {
+        "common_conditions": clean_conditions,
+        "common_symptoms": _plain_text(payload.get("common_symptoms"), "common_symptoms"),
+        "prevention": _plain_text(payload.get("prevention"), "prevention"),
+        "seek_care": _plain_text(payload.get("seek_care"), "seek_care"),
+    }
+
+
+def _retry_after(exc: RateLimitError) -> int | None:
+    try:
+        value = exc.response.headers.get("retry-after")
+        return max(1, min(int(float(value)), 300)) if value else None
+    except (AttributeError, TypeError, ValueError):
+        return None
+
+
+def generate_health_info(
+    *, topic_id: str, label: str, reference: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Generate a bounded Indonesian explanation using the existing Groq API."""
+    reference_payload = {key: reference[key] for key in EXPECTED_FIELDS if key in reference}
+    system_prompt = (
+        "Anda adalah editor informasi kesehatan edukatif berbahasa Indonesia. "
+        "Anda tidak mendiagnosis, tidak memberi dosis obat, dan tidak menambah fakta "
+        "di luar materi rujukan. Sederhanakan materi tanpa menghilangkan tanda bahaya. "
+        "Kembalikan hanya JSON dengan empat field: common_conditions berupa array 2-3 "
+        "string, common_symptoms, prevention, dan seek_care berupa string."
+    )
+    user_prompt = json.dumps(
+        {"topic_id": topic_id, "label": label, "reference_material": reference_payload},
+        ensure_ascii=False,
+    )
+    try:
+        response = _make_client().chat.completions.create(
+            model=get_setting("GROQ_MODEL", DEFAULT_MODEL),
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            response_format={"type": "json_object"},
+            max_tokens=500,
+            temperature=0.2,
+        )
+        content = response.choices[0].message.content
+        if not content:
+            raise AIServiceError("invalid_response", "Jawaban AI kosong.")
+        try:
+            payload = json.loads(content)
+        except json.JSONDecodeError as exc:
+            raise AIServiceError("invalid_response", "Jawaban AI bukan JSON valid.") from exc
+        return validate_ai_payload(payload)
+    except AIServiceError:
+        raise
+    except RateLimitError as exc:
+        raise AIServiceError(
+            "rate_limited",
+            "Batas penggunaan AI sedang tercapai. Informasi dasar ditampilkan.",
+            _retry_after(exc),
+        ) from exc
+    except (AuthenticationError, PermissionDeniedError) as exc:
+        raise AIServiceError(
+            "configuration_error",
+            "Akses layanan AI ditolak. Informasi dasar ditampilkan.",
+        ) from exc
+    except (APITimeoutError, APIConnectionError) as exc:
+        raise AIServiceError(
+            "unavailable",
+            "Layanan AI belum merespons. Informasi dasar ditampilkan.",
+        ) from exc
+    except APIStatusError as exc:
+        category = "configuration_error" if exc.status_code in {400, 404, 422} else "unavailable"
+        raise AIServiceError(
+            category,
+            "Layanan AI tidak tersedia untuk sementara. Informasi dasar ditampilkan.",
+        ) from exc
+    except (IndexError, AttributeError, TypeError) as exc:
+        raise AIServiceError(
+            "invalid_response",
+            "Jawaban AI tidak dapat dibaca. Informasi dasar ditampilkan.",
+        ) from exc
 
 
 def get_health_info(zone_name: str) -> str:
-    """
-    Kirim permintaan ke Groq API dan kembalikan info kesehatan
-    dalam format pipe-separated: ZONA|KONDISI UMUM|GEJALA|SARAN|KE DOKTER JIKA
-    """
-    desc   = _ZONE_DESC.get(zone_name, zone_name)
-    prompt = f"""Kamu adalah asisten kesehatan edukatif berbahasa Indonesia.
-Pengguna menunjuk bagian tubuh: {desc} ({zone_name}).
-
-Berikan penjelasan dalam format TEPAT ini (gunakan | sebagai pemisah, tanpa baris baru):
-
-ZONA: {zone_name}|KONDISI UMUM: [2-3 penyakit/gangguan umum]|GEJALA: [gejala utama]|SARAN: [saran kesehatan preventif]|KE DOKTER JIKA: [kapan harus ke dokter]
-
-Aturan:
-- Maksimal 15 kata per bagian
-- Gunakan bahasa sederhana untuk masyarakat umum
-- Jangan tambahkan teks lain di luar format di atas"""
-
+    """Compatibility wrapper for the former pipe-separated public function."""
+    reference = {
+        "common_conditions": ["Keluhan umum", "Iritasi atau ketegangan"],
+        "common_symptoms": "Gejala berbeda pada setiap orang dan perlu dinilai sesuai keadaan.",
+        "prevention": "Jaga kebiasaan sehat dan hindari pemicu yang diketahui.",
+        "seek_care": "Cari pertolongan bila gejala berat, mendadak, atau memburuk.",
+    }
     try:
-        client = _make_client()
-        resp   = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=300,
-            temperature=0.5,
-        )
-        return resp.choices[0].message.content.strip()
-
-    except ValueError as e:
-        # API key tidak ada
+        data = generate_health_info(topic_id=zone_name, label=zone_name, reference=reference)
+    except AIServiceError as exc:
         return (
-            f"ZONA: {zone_name}|"
-            f"KONDISI UMUM: ⚠️ API key tidak ditemukan|"
-            f"GEJALA: -|"
-            f"SARAN: Tambahkan GROQ_API_KEY ke Streamlit Secrets|"
-            f"KE DOKTER JIKA: Ada keluhan serius"
+            f"ZONA: {zone_name}|KONDISI UMUM: {exc.public_message}|GEJALA: -|"
+            "SARAN: Gunakan informasi dasar aplikasi|KE DOKTER JIKA: Keluhan berat atau memburuk"
         )
-    except Exception as e:
-        return (
-            f"ZONA: {zone_name}|"
-            f"KONDISI UMUM: Gagal memuat ({type(e).__name__})|"
-            f"GEJALA: -|"
-            f"SARAN: Periksa koneksi dan API key|"
-            f"KE DOKTER JIKA: Ada keluhan serius"
-        )
+    return (
+        f"ZONA: {zone_name}|KONDISI UMUM: {', '.join(data['common_conditions'])}|"
+        f"GEJALA: {data['common_symptoms']}|SARAN: {data['prevention']}|"
+        f"KE DOKTER JIKA: {data['seek_care']}"
+    )

@@ -1,0 +1,166 @@
+{
+  "content_version": "2026-09-13.1",
+  "review_status": "reference_sourced_pending_domain_review",
+  "topics": {
+    "head": {
+      "label": "Kepala",
+      "common_conditions": ["Sakit kepala tegang", "Migrain", "Infeksi saluran napas yang menimbulkan nyeri kepala"],
+      "common_symptoms": "Nyeri, rasa tertekan, berdenyut, mual, atau sensitif terhadap cahaya dapat menyertai sakit kepala.",
+      "prevention": "Cukup tidur, minum air, makan teratur, kelola stres, dan catat pemicu berulang.",
+      "seek_care": "Segera cari pertolongan bila nyeri mendadak sangat berat, setelah cedera, disertai kelemahan, bingung, kejang, demam tinggi, atau kaku leher.",
+      "sources": [{"title": "MedlinePlus — Headache", "url": "https://medlineplus.gov/headache.html"}]
+    },
+    "eye_left": {
+      "label": "Mata Kiri",
+      "common_conditions": ["Iritasi mata", "Mata kering", "Konjungtivitis"],
+      "common_symptoms": "Mata merah, gatal, berair, terasa mengganjal, nyeri, atau penglihatan berubah dapat terjadi.",
+      "prevention": "Cuci tangan, hindari mengucek mata, istirahatkan mata dari layar, dan gunakan pelindung saat berisiko.",
+      "seek_care": "Segera periksa bila penglihatan tiba-tiba berkurang, nyeri berat, terkena bahan kimia, cedera, atau ada benda menancap.",
+      "sources": [{"title": "MedlinePlus — Eye Diseases", "url": "https://medlineplus.gov/eyediseases.html"}]
+    },
+    "eye_right": {
+      "label": "Mata Kanan",
+      "common_conditions": ["Iritasi mata", "Mata kering", "Konjungtivitis"],
+      "common_symptoms": "Mata merah, gatal, berair, terasa mengganjal, nyeri, atau penglihatan berubah dapat terjadi.",
+      "prevention": "Cuci tangan, hindari mengucek mata, istirahatkan mata dari layar, dan gunakan pelindung saat berisiko.",
+      "seek_care": "Segera periksa bila penglihatan tiba-tiba berkurang, nyeri berat, terkena bahan kimia, cedera, atau ada benda menancap.",
+      "sources": [{"title": "MedlinePlus — Eye Diseases", "url": "https://medlineplus.gov/eyediseases.html"}]
+    },
+    "nose": {
+      "label": "Hidung dan Sinus",
+      "common_conditions": ["Pilek", "Alergi hidung", "Sinusitis"],
+      "common_symptoms": "Hidung tersumbat atau berair, bersin, nyeri wajah, penurunan penciuman, atau lendir dapat muncul.",
+      "prevention": "Cuci tangan, hindari pemicu alergi yang diketahui, cukup minum, dan jangan berbagi barang pribadi.",
+      "seek_care": "Periksa bila sulit bernapas, perdarahan tidak berhenti, gejala berat atau lama, demam tinggi, bengkak sekitar mata, atau setelah cedera.",
+      "sources": [{"title": "MedlinePlus — Nose Injuries and Disorders", "url": "https://medlineplus.gov/noseinjuriesanddisorders.html"}]
+    },
+    "mouth": {
+      "label": "Mulut, Gigi, dan Tenggorokan",
+      "common_conditions": ["Sariawan", "Radang tenggorokan", "Masalah gigi dan gusi"],
+      "common_symptoms": "Nyeri, luka, gusi berdarah, sakit saat menelan, bau mulut, atau demam dapat menyertai keluhan.",
+      "prevention": "Sikat gigi dengan pasta berfluorida, bersihkan sela gigi, hindari tembakau, dan periksa gigi teratur.",
+      "seek_care": "Segera cari pertolongan bila sulit bernapas atau menelan, bengkak cepat, perdarahan berat, dehidrasi, atau nyeri hebat.",
+      "sources": [{"title": "MedlinePlus — Mouth Disorders", "url": "https://medlineplus.gov/mouthdisorders.html"}]
+    },
+    "ear_left": {
+      "label": "Area Telinga Kiri",
+      "common_conditions": ["Sumbatan kotoran telinga", "Infeksi telinga", "Gangguan pendengaran"],
+      "common_symptoms": "Nyeri, rasa penuh, berdenging, keluar cairan, pusing, atau pendengaran berkurang dapat terjadi.",
+      "prevention": "Jaga telinga tetap kering, hindari suara terlalu keras, dan jangan memasukkan benda ke liang telinga.",
+      "seek_care": "Segera periksa bila pendengaran hilang mendadak, keluar darah atau nanah, pusing berat, cedera, demam tinggi, atau nyeri hebat.",
+      "sources": [{"title": "MedlinePlus — Ear Disorders", "url": "https://medlineplus.gov/eardisorders.html"}]
+    },
+    "ear_right": {
+      "label": "Area Telinga Kanan",
+      "common_conditions": ["Sumbatan kotoran telinga", "Infeksi telinga", "Gangguan pendengaran"],
+      "common_symptoms": "Nyeri, rasa penuh, berdenging, keluar cairan, pusing, atau pendengaran berkurang dapat terjadi.",
+      "prevention": "Jaga telinga tetap kering, hindari suara terlalu keras, dan jangan memasukkan benda ke liang telinga.",
+      "seek_care": "Segera periksa bila pendengaran hilang mendadak, keluar darah atau nanah, pusing berat, cedera, demam tinggi, atau nyeri hebat.",
+      "sources": [{"title": "MedlinePlus — Ear Disorders", "url": "https://medlineplus.gov/eardisorders.html"}]
+    },
+    "chin": {
+      "label": "Dagu dan Rahang",
+      "common_conditions": ["Gangguan sendi rahang", "Ketegangan otot rahang", "Masalah gigi"],
+      "common_symptoms": "Nyeri rahang, bunyi klik, sulit membuka mulut, sakit saat mengunyah, atau bengkak dapat terjadi.",
+      "prevention": "Hindari mengatupkan gigi, kurangi makanan sangat keras saat nyeri, dan rawat kesehatan gigi.",
+      "seek_care": "Segera periksa bila rahang terkunci, sulit bernapas atau menelan, bengkak cepat, demam, cedera, atau nyeri dada menjalar ke rahang.",
+      "sources": [{"title": "MedlinePlus — Jaw Injuries and Disorders", "url": "https://medlineplus.gov/jawinjuriesanddisorders.html"}]
+    },
+    "neck": {
+      "label": "Leher",
+      "common_conditions": ["Ketegangan otot", "Postur yang kurang baik", "Cedera jaringan lunak"],
+      "common_symptoms": "Nyeri, kaku, gerak terbatas, sakit kepala, atau nyeri menjalar ke bahu dan lengan dapat muncul.",
+      "prevention": "Atur posisi kerja, istirahat bergerak, gunakan teknik angkat yang baik, dan hindari posisi statis terlalu lama.",
+      "seek_care": "Segera cari pertolongan setelah cedera berat atau bila ada kelemahan, kebas, demam dengan kaku leher, sulit berjalan, atau sulit bernapas.",
+      "sources": [{"title": "MedlinePlus — Neck Injuries and Disorders", "url": "https://medlineplus.gov/neckinjuriesanddisorders.html"}]
+    },
+    "chest_lungs": {
+      "label": "Dada dan Paru-paru",
+      "common_conditions": ["Infeksi saluran napas", "Asma", "Nyeri otot dinding dada"],
+      "common_symptoms": "Batuk, sesak, mengi, demam, nyeri saat bernapas, atau rasa tidak nyaman di dada dapat terjadi.",
+      "prevention": "Hindari asap rokok, cuci tangan, ikuti imunisasi yang dianjurkan, dan gunakan obat rutin sesuai arahan tenaga kesehatan.",
+      "seek_care": "Segera cari pertolongan bila sulit bernapas, bibir kebiruan, nyeri dada berat, batuk darah, bingung, atau kondisi cepat memburuk.",
+      "sources": [{"title": "MedlinePlus — Lung Diseases", "url": "https://medlineplus.gov/lungdiseases.html"}]
+    },
+    "heart": {
+      "label": "Area Jantung",
+      "common_conditions": ["Nyeri otot dada", "Gangguan irama jantung", "Penyakit jantung"],
+      "common_symptoms": "Nyeri atau tekanan dada, berdebar, sesak, pusing, mudah lelah, atau keringat dingin perlu diperhatikan.",
+      "prevention": "Tidak merokok, aktif bergerak, tidur cukup, dan kelola tekanan darah, gula darah, serta kolesterol bersama tenaga kesehatan.",
+      "seek_care": "Segera hubungi layanan darurat bila nyeri atau tekanan dada menetap, sesak berat, pingsan, atau nyeri menjalar ke lengan, punggung, leher, atau rahang.",
+      "sources": [{"title": "WHO — Cardiovascular diseases", "url": "https://www.who.int/health-topics/cardiovascular-diseases"}]
+    },
+    "abdomen": {
+      "label": "Perut",
+      "common_conditions": ["Gangguan pencernaan", "Infeksi saluran cerna", "Sembelit"],
+      "common_symptoms": "Nyeri, kembung, mual, muntah, diare, sembelit, atau perubahan nafsu makan dapat terjadi.",
+      "prevention": "Cuci tangan, konsumsi makanan dan air yang aman, cukup serat dan cairan, serta makan teratur.",
+      "seek_care": "Segera periksa bila nyeri berat atau menetap, perut kaku, muntah darah, tinja hitam atau berdarah, pingsan, atau tidak bisa minum.",
+      "sources": [{"title": "MedlinePlus — Abdominal Pain", "url": "https://medlineplus.gov/abdominalpain.html"}]
+    },
+    "hip": {
+      "label": "Pinggul",
+      "common_conditions": ["Ketegangan otot", "Radang sendi", "Cedera akibat jatuh atau olahraga"],
+      "common_symptoms": "Nyeri pinggul atau selangkangan, kaku, bengkak, pincang, atau gerak terbatas dapat terjadi.",
+      "prevention": "Latihan bertahap, pemanasan, alas kaki sesuai, dan penguatan otot sesuai kemampuan membantu mengurangi risiko cedera.",
+      "seek_care": "Segera periksa setelah jatuh bila tidak dapat berdiri, tungkai tampak berubah bentuk, nyeri sangat berat, atau ada demam dan bengkak merah.",
+      "sources": [{"title": "MedlinePlus — Hip Injuries and Disorders", "url": "https://medlineplus.gov/hipinjuriesanddisorders.html"}]
+    },
+    "shoulder_left": {
+      "label": "Bahu Kiri",
+      "common_conditions": ["Ketegangan otot", "Radang tendon", "Cedera sendi bahu"],
+      "common_symptoms": "Nyeri, lemah, bengkak, bunyi saat bergerak, atau sulit mengangkat lengan dapat terjadi.",
+      "prevention": "Naikkan beban bertahap, gunakan teknik gerak yang baik, istirahat dari gerakan berulang, dan lakukan pemanasan.",
+      "seek_care": "Segera periksa bila bahu berubah bentuk, lengan sulit digerakkan setelah cedera, kebas atau lemah mendadak, atau nyeri disertai nyeri dada dan sesak.",
+      "sources": [{"title": "MedlinePlus — Shoulder Injuries and Disorders", "url": "https://medlineplus.gov/shoulderinjuriesanddisorders.html"}]
+    },
+    "shoulder_right": {
+      "label": "Bahu Kanan",
+      "common_conditions": ["Ketegangan otot", "Radang tendon", "Cedera sendi bahu"],
+      "common_symptoms": "Nyeri, lemah, bengkak, bunyi saat bergerak, atau sulit mengangkat lengan dapat terjadi.",
+      "prevention": "Naikkan beban bertahap, gunakan teknik gerak yang baik, istirahat dari gerakan berulang, dan lakukan pemanasan.",
+      "seek_care": "Segera periksa bila bahu berubah bentuk, lengan sulit digerakkan setelah cedera, kebas atau lemah mendadak, atau nyeri disertai nyeri dada dan sesak.",
+      "sources": [{"title": "MedlinePlus — Shoulder Injuries and Disorders", "url": "https://medlineplus.gov/shoulderinjuriesanddisorders.html"}]
+    },
+    "elbow_left": {
+      "label": "Siku Kiri",
+      "common_conditions": ["Cedera penggunaan berulang", "Radang tendon", "Memar atau keseleo"],
+      "common_symptoms": "Nyeri, bengkak, kaku, kelemahan genggaman, atau rasa sakit saat menekuk dan meluruskan dapat terjadi.",
+      "prevention": "Kurangi gerakan berulang, gunakan teknik dan alat yang sesuai, lakukan pemanasan, serta naikkan beban bertahap.",
+      "seek_care": "Segera periksa bila siku berubah bentuk, nyeri hebat setelah cedera, tangan kebas atau dingin, atau sendi merah panas disertai demam.",
+      "sources": [{"title": "MedlinePlus — Elbow Injuries and Disorders", "url": "https://medlineplus.gov/elbowinjuriesanddisorders.html"}]
+    },
+    "elbow_right": {
+      "label": "Siku Kanan",
+      "common_conditions": ["Cedera penggunaan berulang", "Radang tendon", "Memar atau keseleo"],
+      "common_symptoms": "Nyeri, bengkak, kaku, kelemahan genggaman, atau rasa sakit saat menekuk dan meluruskan dapat terjadi.",
+      "prevention": "Kurangi gerakan berulang, gunakan teknik dan alat yang sesuai, lakukan pemanasan, serta naikkan beban bertahap.",
+      "seek_care": "Segera periksa bila siku berubah bentuk, nyeri hebat setelah cedera, tangan kebas atau dingin, atau sendi merah panas disertai demam.",
+      "sources": [{"title": "MedlinePlus — Elbow Injuries and Disorders", "url": "https://medlineplus.gov/elbowinjuriesanddisorders.html"}]
+    },
+    "wrist": {
+      "label": "Pergelangan Tangan",
+      "common_conditions": ["Keseleo", "Cedera penggunaan berulang", "Sindrom lorong karpal"],
+      "common_symptoms": "Nyeri, bengkak, kesemutan, kebas, genggaman melemah, atau gerak terbatas dapat terjadi.",
+      "prevention": "Atur posisi kerja, beri jeda gerakan berulang, gunakan teknik angkat yang baik, dan pakai pelindung saat olahraga berisiko.",
+      "seek_care": "Segera periksa bila bentuk berubah setelah cedera, jari pucat atau dingin, kebas menetap, nyeri berat, atau tidak dapat menggerakkan tangan.",
+      "sources": [{"title": "MedlinePlus — Wrist Injuries and Disorders", "url": "https://medlineplus.gov/wristinjuriesanddisorders.html"}]
+    },
+    "knee": {
+      "label": "Lutut",
+      "common_conditions": ["Keseleo", "Cedera penggunaan berulang", "Radang sendi"],
+      "common_symptoms": "Nyeri, bengkak, kaku, bunyi, lutut terasa tidak stabil, atau sulit menumpu dapat terjadi.",
+      "prevention": "Jaga kekuatan otot, pemanasan, naikkan intensitas bertahap, gunakan teknik dan alas kaki yang sesuai.",
+      "seek_care": "Segera periksa bila lutut berubah bentuk, tidak dapat menumpu, bengkak cepat setelah cedera, terkunci, atau merah panas disertai demam.",
+      "sources": [{"title": "MedlinePlus — Knee Injuries and Disorders", "url": "https://medlineplus.gov/kneeinjuriesanddisorders.html"}]
+    },
+    "ankle": {
+      "label": "Pergelangan Kaki",
+      "common_conditions": ["Keseleo", "Cedera tendon", "Memar atau patah tulang"],
+      "common_symptoms": "Nyeri, bengkak, memar, kaku, atau sulit menapak dapat terjadi setelah aktivitas atau cedera.",
+      "prevention": "Pemanasan, latihan keseimbangan, alas kaki yang sesuai, dan peningkatan aktivitas secara bertahap membantu mencegah cedera.",
+      "seek_care": "Segera periksa bila bentuk berubah, tidak dapat menapak, kaki kebas atau dingin, luka terbuka, atau nyeri dan bengkak sangat berat.",
+      "sources": [{"title": "MedlinePlus — Ankle Injuries and Disorders", "url": "https://medlineplus.gov/ankleinjuriesanddisorders.html"}]
+    }
+  }
+}

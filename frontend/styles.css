@@ -1,0 +1,74 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --surface: #10192c;
+  --line: #273653;
+  --muted: #9aabc4;
+  --text: #f1f7ff;
+  --accent: #62d6ff;
+  --green: #5de0b8;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-width: 0; background: transparent; color: var(--text); }
+body { padding: 2px; }
+button { font: inherit; }
+
+.camera-shell {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(16, 25, 44, .92);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .22);
+}
+
+.camera-toolbar {
+  display: flex;
+  gap: .55rem;
+  padding: .75rem;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.camera-toolbar button {
+  border: 1px solid #365070;
+  border-radius: 10px;
+  min-height: 40px;
+  padding: .55rem .85rem;
+  background: #17243c;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.camera-toolbar button:first-child { background: var(--accent); color: #06111e; border-color: var(--accent); font-weight: 700; }
+.camera-toolbar button:hover:not(:disabled) { filter: brightness(1.08); }
+.camera-toolbar button:focus-visible { outline: 3px solid rgba(98, 214, 255, .45); outline-offset: 2px; }
+.camera-toolbar button:disabled { cursor: not-allowed; opacity: .48; }
+
+.status-panel { padding: .8rem .9rem .9rem; }
+.status-line { display: flex; align-items: center; gap: .55rem; font-weight: 700; }
+.status-dot { width: .65rem; height: .65rem; border-radius: 50%; background: #6f809a; }
+#camera-status[data-state="running"] + .status-dot,
+.status-line:has(#camera-status[data-state="running"]) .status-dot { background: var(--green); box-shadow: 0 0 0 5px rgba(93, 224, 184, .12); }
+.status-line:has(#camera-status[data-state="error"]) .status-dot { background: #ff7389; }
+.status-detail { color: var(--muted); font-size: .82rem; line-height: 1.45; margin: .35rem 0 0; }
+
+.camera-stage { position: relative; width: 100%; background: #060a12; }
+.camera-stage[hidden] { display: none; }
+#camera-video { display: none; }
+#camera-canvas { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; }
+
+.progress-panel { padding: .75rem .9rem .9rem; border-top: 1px solid var(--line); }
+.progress-panel label { display: block; color: var(--muted); font-size: .8rem; margin-bottom: .4rem; }
+progress { width: 100%; height: .65rem; accent-color: var(--green); }
+
+.privacy-note { color: var(--muted); font-size: .76rem; line-height: 1.5; padding: 0 .9rem .9rem; }
+
+@media (max-width: 480px) {
+  .camera-toolbar button { flex: 1 1 120px; }
+  .camera-shell { border-radius: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

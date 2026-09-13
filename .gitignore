@@ -1,0 +1,15 @@
+.env
+.streamlit/secrets.toml
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+node_modules/
+test-results/
+playwright-report/
+*.log
+.DS_Store
+Thumbs.db

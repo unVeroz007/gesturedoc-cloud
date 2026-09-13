@@ -1,5 +1,4 @@
-# GestureDoc Web — requirements.txt
-# MediaPipe berjalan di browser (JS/CDN) — Python hanya butuh ini:
-streamlit>=1.28.0
-groq>=0.4.0
-python-dotenv>=1.0.0
+# Runtime versions validated for GestureDoc. Keep exact for reproducible Cloud builds.
+streamlit==1.58.0
+groq==1.4.0
+python-dotenv==1.2.2

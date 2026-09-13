@@ -1,0 +1,15 @@
+{
+  "name": "gesturedoc-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test frontend/tests/*.test.js",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "1.0.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.1"
+  }
+}
