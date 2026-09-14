@@ -6,10 +6,11 @@ import {
   selectZone,
   smoothPoint,
   toCanvas,
-} from "./geometry.js";
-import { DwellController } from "./interaction.js";
+} from "./geometry.js?v=20260914.4";
+import { DwellController } from "./interaction.js?v=20260914.4";
 
 const PROTOCOL_VERSION = 1;
+const FRONTEND_BUILD = "2026.09.14.4";
 const TASKS_VERSION = "1.0.1";
 const PACKAGE_ROOT = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${TASKS_VERSION}`;
 const WASM_ROOT = `${PACKAGE_ROOT}/wasm`;
@@ -41,6 +42,7 @@ const elements = {
 const context = elements.canvas.getContext("2d", { alpha: false });
 
 let args = {
+  frontend_build: FRONTEND_BUILD,
   protocol_version: PROTOCOL_VERSION,
   reset_revision: 0,
   selected_zone_id: null,
@@ -114,6 +116,10 @@ function syncArgs(nextArgs) {
   const previousSelected = localSelectedZoneId || args.selected_zone_id;
   args = { ...args, ...(nextArgs || {}) };
   catalog = new Map((Array.isArray(args.catalog) ? args.catalog : []).map(zone => [zone.zone_id, zone]));
+  if (args.frontend_build !== FRONTEND_BUILD) {
+    setStatus("Versi kamera belum diperbarui", "Muat ulang halaman agar komponen terbaru digunakan.", "error");
+    return;
+  }
   if (args.protocol_version !== PROTOCOL_VERSION) {
     setStatus("Versi komponen tidak cocok", "Muat ulang aplikasi atau hubungi pengelola.", "error");
     return;
@@ -184,9 +190,9 @@ async function initializeVision(generation) {
       baseOptions: { modelAssetPath: MODEL_PATHS.hand, delegate: "CPU" },
       runningMode: "VIDEO",
       numHands: 1,
-      minHandDetectionConfidence: 0.45,
-      minHandPresenceConfidence: 0.45,
-      minTrackingConfidence: 0.45,
+      minHandDetectionConfidence: 0.35,
+      minHandPresenceConfidence: 0.35,
+      minTrackingConfidence: 0.35,
     });
     ensureCurrent();
     setStatus("Memuat model visi…", "Memuat model tubuh…", "loading");
@@ -229,19 +235,28 @@ function firstLandmarks(result, property = "landmarks") {
 function runInference(now) {
   if (!visionModels || elements.video.readyState < 2) return;
   if (now - lastHandAt >= HAND_INTERVAL_MS) {
-    latest.handLandmarks = firstLandmarks(visionModels.hand.detectForVideo(elements.video, now));
-    latest.timestamp = now;
+    const detectedHand = firstLandmarks(visionModels.hand.detectForVideo(elements.video, now));
+    if (detectedHand) {
+      latest.handLandmarks = detectedHand;
+      latest.timestamp = now;
+    }
     lastHandAt = now;
   }
   const poseDue = now - lastPoseAt >= AUX_INTERVAL_MS;
   const faceDue = now - lastFaceAt >= AUX_INTERVAL_MS;
   if (poseDue && (!faceDue || lastPoseAt <= lastFaceAt)) {
-    latest.poseLandmarks = firstLandmarks(visionModels.pose.detectForVideo(elements.video, now));
-    latest.poseTimestamp = now;
+    const detectedPose = firstLandmarks(visionModels.pose.detectForVideo(elements.video, now));
+    if (detectedPose) {
+      latest.poseLandmarks = detectedPose;
+      latest.poseTimestamp = now;
+    }
     lastPoseAt = now;
   } else if (faceDue) {
-    latest.faceLandmarks = firstLandmarks(visionModels.face.detectForVideo(elements.video, now), "faceLandmarks");
-    latest.faceTimestamp = now;
+    const detectedFace = firstLandmarks(visionModels.face.detectForVideo(elements.video, now), "faceLandmarks");
+    if (detectedFace) {
+      latest.faceLandmarks = detectedFace;
+      latest.faceTimestamp = now;
+    }
     lastFaceAt = now;
   }
 }
@@ -495,6 +510,7 @@ window.addEventListener("pagehide", () => stopResources("stopped", "Kamera berhe
 new ResizeObserver(updateHeight).observe(document.body);
 
 postToStreamlit("streamlit:componentReady", { apiVersion: 1 });
+document.documentElement.dataset.frontendBuild = FRONTEND_BUILD;
 setStatus("Kamera belum dimulai", "Tekan Mulai kamera atau gunakan pilihan manual pada panel informasi.", "idle");
 setTimeout(() => {
   if (readyRevision === null) syncArgs(args);

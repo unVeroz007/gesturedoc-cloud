@@ -11,6 +11,7 @@ test("app loads and manual health flow works without camera", async ({ page }) =
   await expect(page.getByText("GestureDoc adalah media edukasi", { exact: false })).toBeVisible();
 
   const camera = page.frameLocator("iframe").first();
+  await expect(camera.locator("html")).toHaveAttribute("data-frontend-build", "2026.09.14.4");
   await expect(camera.getByRole("button", { name: "Mulai kamera" })).toBeEnabled();
   await expect(camera.getByText("Kamera belum dimulai")).toBeVisible();
 
@@ -67,6 +68,7 @@ test("camera models support repeated Start and Stop without a stale stream", asy
   if (cameraStatus !== "Kamera aktif") {
     throw new Error(`Camera startup failed: ${cameraStatus}; console=${JSON.stringify(errors)}`);
   }
+  await expect(camera.locator("#status-detail")).toContainText("Arahkan ujung telunjuk");
   await expect(camera.locator("#camera-canvas")).toBeVisible();
   await camera.getByRole("button", { name: "Stop kamera" }).click();
   await expect(camera.getByText("Kamera berhenti")).toBeVisible();
