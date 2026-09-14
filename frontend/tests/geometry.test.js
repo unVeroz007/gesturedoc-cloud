@@ -38,6 +38,16 @@ test("low visibility landmarks do not create selectable joints", () => {
   assert.ok(zones.wrist_right);
 });
 
+test("moderately visible pose landmarks still create camera targets", () => {
+  const pose = landmarks(33);
+  Object.assign(pose[11], { x: 0.3, y: 0.3, visibility: 0.35, presence: 0.35 });
+  Object.assign(pose[12], { x: 0.7, y: 0.3, visibility: 0.35, presence: 0.35 });
+  const zones = computeZones({ poseLandmarks: pose, width: 640, height: 480 });
+  assert.ok(zones.shoulder_left);
+  assert.ok(zones.shoulder_right);
+  assert.ok(zones.heart);
+});
+
 test("specific priority wins overlap before normalized distance", () => {
   const zones = {
     broad: { x: 0, y: 0, r: 100, priority: 40 },
@@ -67,4 +77,5 @@ test("pointer accepts a naturally extended index without requiring tightly folde
 
   Object.assign(hand[8], { x: 0.58, y: 0.55 });
   assert.equal(pointingTip(hand, 640, 480), null);
+  assert.deepEqual(indexTip(hand, 640, 480), { x: 268.8, y: 264 });
 });

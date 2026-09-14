@@ -14,6 +14,7 @@ test("app loads and manual health flow works without camera", async ({ page }) =
   await expect(camera.getByRole("button", { name: "Mulai kamera" })).toBeEnabled();
   await expect(camera.getByText("Kamera belum dimulai")).toBeVisible();
 
+  await page.getByText("Pilihan manual jika kamera tidak tersedia", { exact: true }).click();
   await page.getByTestId("stSelectbox").click();
   await page.getByText("Kepala", { exact: true }).click();
   await page.getByRole("button", { name: "Tampilkan informasi" }).click();
@@ -25,6 +26,7 @@ test("app loads and manual health flow works without camera", async ({ page }) =
 test("mobile layout keeps manual controls usable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  await page.getByText("Pilihan manual jika kamera tidak tersedia", { exact: true }).click();
   await expect(page.getByRole("button", { name: "Tampilkan informasi" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Reset pilihan" })).toBeVisible();
 });

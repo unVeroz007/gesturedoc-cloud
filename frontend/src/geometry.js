@@ -43,15 +43,15 @@ export function isValidLandmark(point, minimumVisibility = 0.45) {
   return true;
 }
 
-export function toCanvas(point, width, height, mirror = true) {
-  if (!isValidLandmark(point)) return null;
+export function toCanvas(point, width, height, mirror = true, minimumVisibility = 0.45) {
+  if (!isValidLandmark(point, minimumVisibility)) return null;
   return { x: (mirror ? 1 - point.x : point.x) * width, y: point.y * height };
 }
 
-function point(landmarks, index, width, height, mirror, minimumVisibility = 0.45) {
+function point(landmarks, index, width, height, mirror, minimumVisibility = 0.3) {
   const landmark = landmarks?.[index];
   if (!isValidLandmark(landmark, minimumVisibility)) return null;
-  return toCanvas(landmark, width, height, mirror);
+  return toCanvas(landmark, width, height, mirror, minimumVisibility);
 }
 
 function unit(vector, fallback = { x: 0, y: 1 }) {

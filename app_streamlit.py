@@ -154,55 +154,59 @@ with col_camera:
             st.session_state.last_event_rejection = reason
 
 with col_info:
-    st.subheader("Informasi kesehatan")
-    option_pairs = manual_options()
-    option_ids = [zone_id for zone_id, _ in option_pairs]
-    option_labels = dict(option_pairs)
-    default_index = (
-        option_ids.index(st.session_state.selected_zone_id)
-        if st.session_state.selected_zone_id in option_ids
-        else None
-    )
-    manual_zone = st.selectbox(
-        "Pilih area tanpa kamera",
-        options=option_ids,
-        index=default_index,
-        placeholder="Pilih area tubuh",
-        format_func=lambda zone_id: option_labels[zone_id],
-        disabled=st.session_state.request_status == "loading",
-    )
-    select_col, reset_col = st.columns(2)
-    with select_col:
-        manual_submit = st.button(
-            "Tampilkan informasi",
-            type="primary",
-            use_container_width=True,
-            disabled=manual_zone is None or st.session_state.request_status == "loading",
-        )
-    with reset_col:
-        reset_clicked = st.button(
-            "Reset pilihan",
-            use_container_width=True,
-            disabled=st.session_state.request_status == "loading",
-        )
-
-    if manual_submit and manual_zone:
-        _request_health(manual_zone)
-        st.rerun()
-    if reset_clicked:
-        reset_selection(st.session_state)
-        st.rerun()
-
+    st.subheader("Hasil analisis edukatif")
     selected_zone = get_zone(st.session_state.selected_zone_id or "")
     result = st.session_state.health_result
     if selected_zone:
         st.success(f"Area dipilih: **{selected_zone.label}**")
     else:
-        st.info("Belum ada area dipilih. Gunakan kamera atau daftar manual di atas.")
+        st.info(
+            "Belum ada area dipilih. Arahkan ujung telunjuk ke titik pada kamera "
+            "dan tahan sampai indikator mencapai 100%."
+        )
     if isinstance(result, HealthResult):
         _render_result(result)
         if result.status != "success" and st.button("Coba AI lagi", use_container_width=True):
             _request_health(st.session_state.selected_zone_id, force_retry=True)
+            st.rerun()
+
+    with st.expander("Pilihan manual jika kamera tidak tersedia"):
+        option_pairs = manual_options()
+        option_ids = [zone_id for zone_id, _ in option_pairs]
+        option_labels = dict(option_pairs)
+        default_index = (
+            option_ids.index(st.session_state.selected_zone_id)
+            if st.session_state.selected_zone_id in option_ids
+            else None
+        )
+        manual_zone = st.selectbox(
+            "Pilih area tubuh",
+            options=option_ids,
+            index=default_index,
+            placeholder="Pilih area tubuh",
+            format_func=lambda zone_id: option_labels[zone_id],
+            disabled=st.session_state.request_status == "loading",
+        )
+        select_col, reset_col = st.columns(2)
+        with select_col:
+            manual_submit = st.button(
+                "Tampilkan informasi",
+                type="primary",
+                use_container_width=True,
+                disabled=manual_zone is None or st.session_state.request_status == "loading",
+            )
+        with reset_col:
+            reset_clicked = st.button(
+                "Reset pilihan",
+                use_container_width=True,
+                disabled=st.session_state.request_status == "loading",
+            )
+
+        if manual_submit and manual_zone:
+            _request_health(manual_zone)
+            st.rerun()
+        if reset_clicked:
+            reset_selection(st.session_state)
             st.rerun()
 
 st.divider()
@@ -211,7 +215,7 @@ with st.expander("Cara menggunakan kamera dan batas kemampuan"):
         """
 1. Tekan **Mulai kamera**, lalu izinkan akses kamera pada browser.
 2. Pastikan satu orang terlihat dan pencahayaan cukup.
-3. Luruskan telunjuk, arahkan ke titik area tubuh, dan tahan sekitar satu detik.
+3. Arahkan ujung telunjuk ke titik area tubuh dan tahan sampai indikator mencapai 100%.
 4. Gunakan **Stop kamera** setelah selesai. Anda selalu dapat memakai pilihan manual.
 
 Deteksi hanya memperkirakan posisi area tubuh dari landmark permukaan. Aplikasi tidak melihat organ,

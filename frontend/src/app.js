@@ -2,7 +2,6 @@ import {
   computeZones,
   HAND_SEGMENTS,
   indexTip,
-  pointingTip,
   POSE_SEGMENTS,
   selectZone,
   smoothPoint,
@@ -23,6 +22,7 @@ const HAND_MAX_AGE_MS = 260;
 const AUX_MAX_AGE_MS = 900;
 const HAND_INTERVAL_MS = 100;
 const AUX_INTERVAL_MS = 260;
+const SELECTION_NOTICE_MS = 2500;
 const instanceId = globalThis.crypto?.randomUUID?.() || `instance-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const dwell = new DwellController({ dwellMs: 1000, graceMs: 100, releaseMs: 180 });
 
@@ -64,6 +64,7 @@ let pointer = null;
 let hoverZoneId = null;
 let localSelectedZoneId = null;
 let cameraState = "idle";
+let selectionNoticeUntil = -Infinity;
 
 function postToStreamlit(type, payload = {}) {
   window.parent.postMessage({ isStreamlitMessage: true, type, ...payload }, "*");
@@ -121,9 +122,18 @@ function syncArgs(nextArgs) {
     dwell.reset(args.reset_revision, previousSelected);
     hoverZoneId = null;
     localSelectedZoneId = null;
+    selectionNoticeUntil = -Infinity;
     updateProgress(null, 0);
   }
   if (args.selected_zone_id !== undefined) localSelectedZoneId = args.selected_zone_id;
+  if (cameraState === "running" && args.selected_zone_id) {
+    const ready = args.request_status === "ready";
+    setStatus(
+      ready ? `Hasil siap: ${labelFor(args.selected_zone_id)}` : `Area dipilih: ${labelFor(args.selected_zone_id)}`,
+      ready ? "Lihat panel hasil analisis edukatif di samping atau di bawah kamera." : "Menyiapkan informasi kesehatan…",
+      "running",
+    );
+  }
   sendReadyIfNeeded();
 }
 
@@ -153,6 +163,7 @@ function stopResources(finalState = "stopped", message = "Kamera berhenti") {
   zones = {};
   pointer = null;
   hoverZoneId = null;
+  selectionNoticeUntil = -Infinity;
   updateProgress(null, 0);
   dwell.reset(args.reset_revision, localSelectedZoneId);
   setStatus(message, "Pilihan manual tetap dapat digunakan.", finalState);
@@ -183,9 +194,9 @@ async function initializeVision(generation) {
       baseOptions: { modelAssetPath: MODEL_PATHS.pose, delegate: "CPU" },
       runningMode: "VIDEO",
       numPoses: 1,
-      minPoseDetectionConfidence: 0.55,
-      minPosePresenceConfidence: 0.55,
-      minTrackingConfidence: 0.55,
+      minPoseDetectionConfidence: 0.45,
+      minPosePresenceConfidence: 0.45,
+      minTrackingConfidence: 0.45,
       outputSegmentationMasks: false,
     });
     ensureCurrent();
@@ -194,9 +205,9 @@ async function initializeVision(generation) {
       baseOptions: { modelAssetPath: MODEL_PATHS.face, delegate: "CPU" },
       runningMode: "VIDEO",
       numFaces: 1,
-      minFaceDetectionConfidence: 0.55,
-      minFacePresenceConfidence: 0.55,
-      minTrackingConfidence: 0.55,
+      minFaceDetectionConfidence: 0.45,
+      minFacePresenceConfidence: 0.45,
+      minTrackingConfidence: 0.45,
       outputFaceBlendshapes: false,
       outputFacialTransformationMatrixes: false,
     });
@@ -296,7 +307,7 @@ async function startCamera() {
     setStatus("Memuat model visi…", "Unduhan pertama dapat memerlukan beberapa detik.", "loading");
     await initializeVision(generation);
     if (generation !== cameraGeneration) return;
-    setStatus("Kamera aktif", "Luruskan telunjuk dan tahan pada titik area sekitar satu detik.", "running");
+    setStatus("Kamera aktif", "Arahkan ujung telunjuk dan tahan pada titik area sekitar satu detik.", "running");
     animationId = requestAnimationFrame(() => renderLoop(generation));
   } catch (error) {
     clearTimeout(pendingNotice);
@@ -355,14 +366,6 @@ function drawHand(landmarks, width, height) {
   }
 }
 
-function drawObservedTip(tip, pointing) {
-  if (!tip || pointing) return;
-  context.beginPath();
-  context.arc(tip.x, tip.y, 8, 0, Math.PI * 2);
-  context.fillStyle = "rgba(255,190,92,.9)";
-  context.fill();
-}
-
 function colorFor(zoneId) {
   const source = catalog.get(zoneId)?.source;
   if (zoneId === "heart") return [255, 112, 132];
@@ -375,13 +378,19 @@ function drawZones() {
     const active = zoneId === localSelectedZoneId;
     const hovered = zoneId === hoverZoneId;
     context.beginPath();
-    context.arc(area.x, area.y, active || hovered ? area.r : 4, 0, Math.PI * 2);
-    context.fillStyle = `rgba(${r},${g},${b},${active ? .24 : hovered ? .12 : .82})`;
+    context.arc(area.x, area.y, active || hovered ? area.r : 9, 0, Math.PI * 2);
+    context.fillStyle = `rgba(${r},${g},${b},${active ? .24 : hovered ? .15 : .3})`;
     context.fill();
+    context.strokeStyle = `rgba(${r},${g},${b},${active || hovered ? 1 : .92})`;
+    context.lineWidth = active ? 3 : 2;
+    context.stroke();
+    if (!active && !hovered) {
+      context.beginPath();
+      context.arc(area.x, area.y, 3.5, 0, Math.PI * 2);
+      context.fillStyle = `rgb(${r},${g},${b})`;
+      context.fill();
+    }
     if (active || hovered) {
-      context.strokeStyle = `rgb(${r},${g},${b})`;
-      context.lineWidth = active ? 3 : 2;
-      context.stroke();
       const label = labelFor(zoneId);
       context.font = "600 12px system-ui, sans-serif";
       const width = context.measureText(label).width;
@@ -395,14 +404,27 @@ function drawZones() {
 
 function drawPointer() {
   if (!pointer) return;
+  const [r, g, b] = hoverZoneId ? colorFor(hoverZoneId) : [93, 224, 184];
   context.beginPath();
-  context.arc(pointer.x, pointer.y, 13, 0, Math.PI * 2);
-  context.fillStyle = "rgba(255,255,255,.9)";
+  context.arc(pointer.x, pointer.y, 14, 0, Math.PI * 2);
+  context.fillStyle = `rgba(${r},${g},${b},.95)`;
   context.fill();
   context.beginPath();
-  context.arc(pointer.x, pointer.y, 18, 0, Math.PI * 2);
-  context.strokeStyle = "rgba(98,214,255,.95)";
+  context.arc(pointer.x, pointer.y, 21, 0, Math.PI * 2);
+  context.strokeStyle = "rgba(255,255,255,.95)";
   context.lineWidth = 3;
+  context.stroke();
+  context.strokeStyle = "rgba(255,255,255,.72)";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(pointer.x - 29, pointer.y);
+  context.lineTo(pointer.x - 20, pointer.y);
+  context.moveTo(pointer.x + 20, pointer.y);
+  context.lineTo(pointer.x + 29, pointer.y);
+  context.moveTo(pointer.x, pointer.y - 29);
+  context.lineTo(pointer.x, pointer.y - 20);
+  context.moveTo(pointer.x, pointer.y + 20);
+  context.lineTo(pointer.x, pointer.y + 29);
   context.stroke();
 }
 
@@ -429,26 +451,34 @@ function renderLoop(generation) {
   const face = now - latest.faceTimestamp <= AUX_MAX_AGE_MS ? latest.faceLandmarks : null;
   const hand = now - latest.timestamp <= HAND_MAX_AGE_MS ? latest.handLandmarks : null;
   zones = computeZones({ poseLandmarks: pose, faceLandmarks: face, width, height, mirror: true });
-  const observedTip = indexTip(hand, width, height, true);
-  const rawPointer = pointingTip(hand, width, height, true);
+  const rawPointer = indexTip(hand, width, height, true);
   pointer = rawPointer ? smoothPoint(pointer, rawPointer) : null;
   const detected = selectZone(pointer, zones, hoverZoneId);
   const interaction = dwell.update(detected, now, Boolean(args.interaction_enabled) && document.visibilityState === "visible");
   hoverZoneId = interaction.candidate;
   if (interaction.selected) {
     localSelectedZoneId = interaction.selected;
+    selectionNoticeUntil = now + SELECTION_NOTICE_MS;
+    setStatus(
+      `Area dipilih: ${labelFor(interaction.selected)}`,
+      "Menyiapkan hasil analisis edukatif…",
+      "running",
+    );
     sendComponentEvent("zone_selected", interaction.selected);
   }
   drawConnections(pose, POSE_SEGMENTS, width, height, "rgba(98,214,255,.42)", 2);
   drawHand(hand, width, height);
   drawZones();
-  drawObservedTip(observedTip, Boolean(rawPointer));
   drawPointer();
-  let guidance = "Telunjuk terdeteksi — arahkan ke titik area tubuh";
+  let guidance = "Ujung telunjuk terdeteksi — arahkan ke salah satu titik bercahaya";
   if (!hand) guidance = "Tangan belum terlihat — dekatkan tangan dan pastikan pencahayaan cukup";
-  else if (!rawPointer) guidance = "Tangan terdeteksi — luruskan telunjuk";
+  else if (!rawPointer) guidance = "Tangan terdeteksi — pastikan ujung telunjuk terlihat jelas";
   else if (Object.keys(zones).length === 0) guidance = "Telunjuk terdeteksi — pastikan wajah atau tubuh juga terlihat";
-  updateProgress(hoverZoneId, interaction.progress, guidance);
+  if (now < selectionNoticeUntil && localSelectedZoneId) {
+    updateProgress(localSelectedZoneId, 1, `Terpilih: ${labelFor(localSelectedZoneId)}`);
+  } else {
+    updateProgress(hoverZoneId, interaction.progress, guidance);
+  }
   animationId = requestAnimationFrame(() => renderLoop(generation));
 }
 
