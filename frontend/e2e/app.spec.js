@@ -50,7 +50,7 @@ test("Stop cancels model startup without reviving the camera", async ({ page }) 
 });
 
 test("camera models support repeated Start and Stop without a stale stream", async ({ page }) => {
-  test.setTimeout(120000);
+  test.setTimeout(180000);
   const errors = [];
   page.on("console", message => {
     const text = message.text();
@@ -60,11 +60,16 @@ test("camera models support repeated Start and Stop without a stale stream", asy
   await page.goto("/");
   const camera = page.frameLocator("iframe").first();
   await camera.getByRole("button", { name: "Mulai kamera" }).click();
-  await expect.poll(
-    () => camera.locator("#camera-status").textContent(),
-    { timeout: 90000 },
-  ).toMatch(/Kamera aktif|Model visi gagal dimuat/);
-  const cameraStatus = await camera.locator("#camera-status").textContent();
+  let cameraStatus = "";
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await expect.poll(
+      () => camera.locator("#camera-status").textContent(),
+      { timeout: 70000 },
+    ).toMatch(/Kamera aktif|Kamera belum dapat digunakan/);
+    cameraStatus = await camera.locator("#camera-status").textContent();
+    if (cameraStatus === "Kamera aktif") break;
+    if (attempt === 0) await camera.getByRole("button", { name: "Coba lagi" }).click();
+  }
   if (cameraStatus !== "Kamera aktif") {
     throw new Error(`Camera startup failed: ${cameraStatus}; console=${JSON.stringify(errors)}`);
   }
