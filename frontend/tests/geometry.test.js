@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { computeZones, pointingTip, selectZone, toCanvas } from "../src/geometry.js";
+import { computeZones, indexTip, pointingTip, selectZone, toCanvas } from "../src/geometry.js";
 
 function landmarks(size) {
   return Array.from({ length: size }, () => ({ x: 0.5, y: 0.5, visibility: 1, presence: 1 }));
@@ -47,7 +47,7 @@ test("specific priority wins overlap before normalized distance", () => {
   assert.equal(selectZone({ x: 111, y: 0 }, { old: { x: 0, y: 0, r: 100, priority: 10 } }, "old"), "old");
 });
 
-test("pointer is emitted only for a straight index with folded fingers", () => {
+test("pointer accepts a naturally extended index without requiring tightly folded fingers", () => {
   const hand = landmarks(21);
   Object.assign(hand[0], { x: 0.5, y: 0.82 });
   Object.assign(hand[5], { x: 0.45, y: 0.68 });
@@ -60,6 +60,11 @@ test("pointer is emitted only for a straight index with folded fingers", () => {
     Object.assign(hand[tip], { x: 0.54, y: 0.7 });
   }
   assert.ok(pointingTip(hand, 640, 480));
+
+  for (const tip of [12, 16, 20]) Object.assign(hand[tip], { x: 0.54, y: 0.3 });
+  assert.ok(pointingTip(hand, 640, 480));
+  assert.deepEqual(indexTip(hand, 640, 480), { x: 352, y: 96 });
+
   Object.assign(hand[8], { x: 0.58, y: 0.55 });
   assert.equal(pointingTip(hand, 640, 480), null);
 });

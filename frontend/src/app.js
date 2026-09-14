@@ -1,4 +1,13 @@
-import { computeZones, pointingTip, POSE_SEGMENTS, selectZone, smoothPoint, toCanvas } from "./geometry.js";
+import {
+  computeZones,
+  HAND_SEGMENTS,
+  indexTip,
+  pointingTip,
+  POSE_SEGMENTS,
+  selectZone,
+  smoothPoint,
+  toCanvas,
+} from "./geometry.js";
 import { DwellController } from "./interaction.js";
 
 const PROTOCOL_VERSION = 1;
@@ -164,9 +173,9 @@ async function initializeVision(generation) {
       baseOptions: { modelAssetPath: MODEL_PATHS.hand, delegate: "CPU" },
       runningMode: "VIDEO",
       numHands: 1,
-      minHandDetectionConfidence: 0.6,
-      minHandPresenceConfidence: 0.55,
-      minTrackingConfidence: 0.55,
+      minHandDetectionConfidence: 0.45,
+      minHandPresenceConfidence: 0.45,
+      minTrackingConfidence: 0.45,
     });
     ensureCurrent();
     setStatus("Memuat model visi…", "Memuat model tubuh…", "loading");
@@ -298,11 +307,11 @@ async function startCamera() {
   }
 }
 
-function updateProgress(zoneId, progress) {
+function updateProgress(zoneId, progress, guidance = null) {
   elements.progress.value = Math.round(progress * 100);
   elements.progressLabel.textContent = zoneId
     ? `${labelFor(zoneId)} — ${Math.round(progress * 100)}%`
-    : "Arahkan telunjuk ke titik area tubuh";
+    : guidance || "Arahkan telunjuk ke titik area tubuh";
 }
 
 function drawVideo(width, height) {
@@ -318,11 +327,11 @@ function drawVideo(width, height) {
   context.fillRect(0, 0, width, 80);
 }
 
-function drawSkeleton(landmarks, width, height) {
+function drawConnections(landmarks, segments, width, height, color, lineWidth) {
   if (!landmarks) return;
-  context.strokeStyle = "rgba(98,214,255,.42)";
-  context.lineWidth = 2;
-  for (const [a, b] of POSE_SEGMENTS) {
+  context.strokeStyle = color;
+  context.lineWidth = lineWidth;
+  for (const [a, b] of segments) {
     const start = toCanvas(landmarks[a], width, height, true);
     const end = toCanvas(landmarks[b], width, height, true);
     if (!start || !end) continue;
@@ -331,6 +340,27 @@ function drawSkeleton(landmarks, width, height) {
     context.lineTo(end.x, end.y);
     context.stroke();
   }
+}
+
+function drawHand(landmarks, width, height) {
+  if (!landmarks) return;
+  drawConnections(landmarks, HAND_SEGMENTS, width, height, "rgba(93,224,184,.82)", 3);
+  context.fillStyle = "rgba(93,224,184,.95)";
+  for (const landmark of landmarks) {
+    const visible = toCanvas(landmark, width, height, true);
+    if (!visible) continue;
+    context.beginPath();
+    context.arc(visible.x, visible.y, 3, 0, Math.PI * 2);
+    context.fill();
+  }
+}
+
+function drawObservedTip(tip, pointing) {
+  if (!tip || pointing) return;
+  context.beginPath();
+  context.arc(tip.x, tip.y, 8, 0, Math.PI * 2);
+  context.fillStyle = "rgba(255,190,92,.9)";
+  context.fill();
 }
 
 function colorFor(zoneId) {
@@ -399,6 +429,7 @@ function renderLoop(generation) {
   const face = now - latest.faceTimestamp <= AUX_MAX_AGE_MS ? latest.faceLandmarks : null;
   const hand = now - latest.timestamp <= HAND_MAX_AGE_MS ? latest.handLandmarks : null;
   zones = computeZones({ poseLandmarks: pose, faceLandmarks: face, width, height, mirror: true });
+  const observedTip = indexTip(hand, width, height, true);
   const rawPointer = pointingTip(hand, width, height, true);
   pointer = rawPointer ? smoothPoint(pointer, rawPointer) : null;
   const detected = selectZone(pointer, zones, hoverZoneId);
@@ -408,10 +439,16 @@ function renderLoop(generation) {
     localSelectedZoneId = interaction.selected;
     sendComponentEvent("zone_selected", interaction.selected);
   }
-  drawSkeleton(pose, width, height);
+  drawConnections(pose, POSE_SEGMENTS, width, height, "rgba(98,214,255,.42)", 2);
+  drawHand(hand, width, height);
   drawZones();
+  drawObservedTip(observedTip, Boolean(rawPointer));
   drawPointer();
-  updateProgress(hoverZoneId, interaction.progress);
+  let guidance = "Telunjuk terdeteksi — arahkan ke titik area tubuh";
+  if (!hand) guidance = "Tangan belum terlihat — dekatkan tangan dan pastikan pencahayaan cukup";
+  else if (!rawPointer) guidance = "Tangan terdeteksi — luruskan telunjuk";
+  else if (Object.keys(zones).length === 0) guidance = "Telunjuk terdeteksi — pastikan wajah atau tubuh juga terlihat";
+  updateProgress(hoverZoneId, interaction.progress, guidance);
   animationId = requestAnimationFrame(() => renderLoop(generation));
 }
 

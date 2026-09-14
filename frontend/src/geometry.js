@@ -3,6 +3,14 @@ export const POSE_SEGMENTS = [
   [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28],
 ];
 
+export const HAND_SEGMENTS = [
+  [0, 1], [1, 2], [2, 3], [3, 4],
+  [0, 5], [5, 6], [6, 7], [7, 8],
+  [5, 9], [9, 10], [10, 11], [11, 12],
+  [9, 13], [13, 14], [14, 15], [15, 16],
+  [13, 17], [17, 18], [18, 19], [19, 20], [0, 17],
+];
+
 const FACE = {
   forehead: 10,
   nose: 1,
@@ -179,17 +187,19 @@ function angle(a, b, c) {
 }
 
 export function pointingTip(handLandmarks, width, height, mirror = true) {
-  if (!Array.isArray(handLandmarks) || handLandmarks.length < 21) return null;
-  const normalized = [0, 5, 6, 7, 8, 9, 10, 12, 13, 14, 16, 17, 18, 20].every(index => isValidLandmark(handLandmarks[index], 0));
+  if (!Array.isArray(handLandmarks) || handLandmarks.length < 9) return null;
+  const normalized = [0, 5, 6, 7, 8].every(index => isValidLandmark(handLandmarks[index], 0));
   if (!normalized) return null;
-  const indexStraight = angle(handLandmarks[5], handLandmarks[6], handLandmarks[8]) >= 145
-    && angle(handLandmarks[6], handLandmarks[7], handLandmarks[8]) >= 145;
+  const indexStraight = angle(handLandmarks[5], handLandmarks[6], handLandmarks[8]) >= 135
+    && angle(handLandmarks[6], handLandmarks[7], handLandmarks[8]) >= 130;
   const wrist = handLandmarks[0];
-  const indexLong = distance(wrist, handLandmarks[8]) > distance(wrist, handLandmarks[6]) * 1.12;
-  const folded = [[10, 12], [14, 16], [18, 20]].filter(([pip, tip]) =>
-    distance(wrist, handLandmarks[tip]) < distance(wrist, handLandmarks[pip]) * 1.08
-  ).length;
-  if (!indexStraight || !indexLong || folded < 2) return null;
+  const indexLong = distance(wrist, handLandmarks[8]) > distance(wrist, handLandmarks[6]) * 1.05;
+  if (!indexStraight || !indexLong) return null;
+  return toCanvas(handLandmarks[8], width, height, mirror);
+}
+
+export function indexTip(handLandmarks, width, height, mirror = true) {
+  if (!Array.isArray(handLandmarks) || handLandmarks.length < 9) return null;
   return toCanvas(handLandmarks[8], width, height, mirror);
 }
 
