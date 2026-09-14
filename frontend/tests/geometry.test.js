@@ -79,3 +79,9 @@ test("pointer accepts a naturally extended index without requiring tightly folde
   assert.equal(pointingTip(hand, 640, 480), null);
   assert.deepEqual(indexTip(hand, 640, 480), { x: 268.8, y: 264 });
 });
+
+test("hand fingertip remains usable when MediaPipe reports zero visibility metadata", () => {
+  const hand = landmarks(21);
+  Object.assign(hand[8], { x: 0.25, y: 0.4, visibility: 0, presence: 0 });
+  assert.deepEqual(indexTip(hand, 640, 480), { x: 480, y: 192 });
+});

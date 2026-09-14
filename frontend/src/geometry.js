@@ -195,12 +195,12 @@ export function pointingTip(handLandmarks, width, height, mirror = true) {
   const wrist = handLandmarks[0];
   const indexLong = distance(wrist, handLandmarks[8]) > distance(wrist, handLandmarks[6]) * 1.05;
   if (!indexStraight || !indexLong) return null;
-  return toCanvas(handLandmarks[8], width, height, mirror);
+  return toCanvas(handLandmarks[8], width, height, mirror, 0);
 }
 
 export function indexTip(handLandmarks, width, height, mirror = true) {
   if (!Array.isArray(handLandmarks) || handLandmarks.length < 9) return null;
-  return toCanvas(handLandmarks[8], width, height, mirror);
+  return toCanvas(handLandmarks[8], width, height, mirror, 0);
 }
 
 export function smoothPoint(previous, next, alpha = 0.42) {

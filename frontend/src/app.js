@@ -338,13 +338,13 @@ function drawVideo(width, height) {
   context.fillRect(0, 0, width, 80);
 }
 
-function drawConnections(landmarks, segments, width, height, color, lineWidth) {
+function drawConnections(landmarks, segments, width, height, color, lineWidth, minimumVisibility = 0.45) {
   if (!landmarks) return;
   context.strokeStyle = color;
   context.lineWidth = lineWidth;
   for (const [a, b] of segments) {
-    const start = toCanvas(landmarks[a], width, height, true);
-    const end = toCanvas(landmarks[b], width, height, true);
+    const start = toCanvas(landmarks[a], width, height, true, minimumVisibility);
+    const end = toCanvas(landmarks[b], width, height, true, minimumVisibility);
     if (!start || !end) continue;
     context.beginPath();
     context.moveTo(start.x, start.y);
@@ -355,10 +355,10 @@ function drawConnections(landmarks, segments, width, height, color, lineWidth) {
 
 function drawHand(landmarks, width, height) {
   if (!landmarks) return;
-  drawConnections(landmarks, HAND_SEGMENTS, width, height, "rgba(93,224,184,.82)", 3);
+  drawConnections(landmarks, HAND_SEGMENTS, width, height, "rgba(93,224,184,.82)", 3, 0);
   context.fillStyle = "rgba(93,224,184,.95)";
   for (const landmark of landmarks) {
-    const visible = toCanvas(landmark, width, height, true);
+    const visible = toCanvas(landmark, width, height, true, 0);
     if (!visible) continue;
     context.beginPath();
     context.arc(visible.x, visible.y, 3, 0, Math.PI * 2);
@@ -466,7 +466,7 @@ function renderLoop(generation) {
     );
     sendComponentEvent("zone_selected", interaction.selected);
   }
-  drawConnections(pose, POSE_SEGMENTS, width, height, "rgba(98,214,255,.42)", 2);
+  drawConnections(pose, POSE_SEGMENTS, width, height, "rgba(98,214,255,.42)", 2, 0.3);
   drawHand(hand, width, height);
   drawZones();
   drawPointer();
