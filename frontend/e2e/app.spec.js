@@ -11,7 +11,7 @@ test("app loads and manual health flow works without camera", async ({ page }) =
   await expect(page.getByText("GestureDoc adalah media edukasi", { exact: false })).toBeVisible();
 
   const camera = page.frameLocator("iframe").first();
-  await expect(camera.locator("html")).toHaveAttribute("data-frontend-build", "2026.09.14.4");
+  await expect(camera.locator("html")).toHaveAttribute("data-frontend-build", "2026.09.14.5");
   await expect(camera.getByRole("button", { name: "Mulai kamera" })).toBeEnabled();
   await expect(camera.getByText("Kamera belum dimulai")).toBeVisible();
 
@@ -75,6 +75,32 @@ test("camera models support repeated Start and Stop without a stale stream", asy
   }
   await expect(camera.locator("#status-detail")).toContainText("Arahkan ujung telunjuk");
   await expect(camera.locator("#camera-canvas")).toBeVisible();
+  const iframe = page.locator("iframe").first();
+  await page.waitForTimeout(500);
+  const heightBeforeRerenders = Math.round((await iframe.boundingBox()).height);
+  await page.evaluate(async () => {
+    const componentFrame = document.querySelector("iframe");
+    const renderMessage = {
+      type: "streamlit:render",
+      args: {
+        frontend_build: "2026.09.14.5",
+        protocol_version: 1,
+        reset_revision: 0,
+        selected_zone_id: "head",
+        request_status: "ready",
+        interaction_enabled: true,
+        catalog: [{ zone_id: "head", label: "Kepala", source: "face" }],
+      },
+    };
+    for (let index = 0; index < 20; index += 1) {
+      componentFrame.contentWindow.postMessage(renderMessage, "*");
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+  });
+  await page.waitForTimeout(500);
+  const heightAfterRerenders = Math.round((await iframe.boundingBox()).height);
+  expect(heightAfterRerenders).toBeLessThan(900);
+  expect(heightAfterRerenders).toBeLessThanOrEqual(heightBeforeRerenders + 2);
   await camera.getByRole("button", { name: "Stop kamera" }).click();
   await expect(camera.getByText("Kamera berhenti")).toBeVisible();
   await expect(camera.locator("#camera-stage")).toBeHidden();

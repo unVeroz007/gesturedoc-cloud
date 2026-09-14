@@ -24,8 +24,8 @@ from zone_catalog import get_zone, manual_options, public_catalog
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 LOGGER = logging.getLogger("gesturedoc.app")
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend")
-FRONTEND_BUILD = "2026.09.14.4"
-gesture_component = components.declare_component("gesture_doc_20260914_4", path=FRONTEND_DIR)
+FRONTEND_BUILD = "2026.09.14.5"
+gesture_component = components.declare_component("gesture_doc_20260914_5", path=FRONTEND_DIR)
 
 st.set_page_config(
     page_title="GestureDoc — Informasi Kesehatan",

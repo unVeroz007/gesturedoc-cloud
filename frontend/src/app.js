@@ -6,11 +6,11 @@ import {
   selectZone,
   smoothPoint,
   toCanvas,
-} from "./geometry.js?v=20260914.4";
-import { DwellController } from "./interaction.js?v=20260914.4";
+} from "./geometry.js?v=20260914.5";
+import { DwellController } from "./interaction.js?v=20260914.5";
 
 const PROTOCOL_VERSION = 1;
-const FRONTEND_BUILD = "2026.09.14.4";
+const FRONTEND_BUILD = "2026.09.14.5";
 const TASKS_VERSION = "1.0.1";
 const PACKAGE_ROOT = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${TASKS_VERSION}`;
 const WASM_ROOT = `${PACKAGE_ROOT}/wasm`;
@@ -28,6 +28,7 @@ const instanceId = globalThis.crypto?.randomUUID?.() || `instance-${Date.now()}-
 const dwell = new DwellController({ dwellMs: 1000, graceMs: 100, releaseMs: 180 });
 
 const elements = {
+  shell: document.querySelector(".camera-shell"),
   start: document.querySelector("#start-camera"),
   stop: document.querySelector("#stop-camera"),
   retry: document.querySelector("#retry-camera"),
@@ -67,6 +68,7 @@ let hoverZoneId = null;
 let localSelectedZoneId = null;
 let cameraState = "idle";
 let selectionNoticeUntil = -Infinity;
+let lastFrameHeight = 0;
 
 function postToStreamlit(type, payload = {}) {
   window.parent.postMessage({ isStreamlitMessage: true, type, ...payload }, "*");
@@ -93,7 +95,10 @@ function sendReadyIfNeeded() {
 }
 
 function updateHeight() {
-  postToStreamlit("streamlit:setFrameHeight", { height: Math.ceil(document.documentElement.scrollHeight + 4) });
+  const height = Math.ceil(elements.shell.getBoundingClientRect().height + 4);
+  if (height === lastFrameHeight) return;
+  lastFrameHeight = height;
+  postToStreamlit("streamlit:setFrameHeight", { height });
 }
 
 function setStatus(message, detail = "", state = cameraState) {
@@ -507,7 +512,7 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 window.addEventListener("pagehide", () => stopResources("stopped", "Kamera berhenti"), { once: true });
-new ResizeObserver(updateHeight).observe(document.body);
+new ResizeObserver(updateHeight).observe(elements.shell);
 
 postToStreamlit("streamlit:componentReady", { apiVersion: 1 });
 document.documentElement.dataset.frontendBuild = FRONTEND_BUILD;

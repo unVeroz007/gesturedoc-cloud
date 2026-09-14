@@ -10,7 +10,7 @@
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; min-width: 0; background: transparent; color: var(--text); }
+html, body { margin: 0; min-width: 0; height: auto; overflow: hidden; background: transparent; color: var(--text); }
 body { padding: 2px; }
 button { font: inherit; }
 
