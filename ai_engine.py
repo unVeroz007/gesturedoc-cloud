@@ -24,6 +24,7 @@ from groq import (
 load_dotenv()
 LOGGER = logging.getLogger("gesturedoc.ai")
 DEFAULT_MODEL = "openai/gpt-oss-20b"
+API_KEY_PLACEHOLDERS = frozenset({"gsk_your_key_here", "gsk_isi_key_produksi"})
 EXPECTED_FIELDS = frozenset(
     {"common_conditions", "common_symptoms", "prevention", "seek_care"}
 )
@@ -54,10 +55,10 @@ def get_setting(name: str, default: str = "") -> str:
 
 def _make_client() -> Groq:
     api_key = get_setting("GROQ_API_KEY")
-    if not api_key:
+    if not api_key or api_key in API_KEY_PLACEHOLDERS or not api_key.startswith("gsk_") or len(api_key) < 30:
         raise AIServiceError(
             "configuration_error",
-            "Layanan AI belum dikonfigurasi. Informasi dasar tetap tersedia.",
+            "Groq API key belum valid. Informasi dasar ditampilkan.",
         )
     try:
         timeout = float(get_setting("GROQ_TIMEOUT_SECONDS", "10"))
@@ -149,7 +150,7 @@ def generate_health_info(
     except (AuthenticationError, PermissionDeniedError) as exc:
         raise AIServiceError(
             "configuration_error",
-            "Akses layanan AI ditolak. Informasi dasar ditampilkan.",
+            "Groq menolak API key yang dikonfigurasi. Informasi dasar ditampilkan.",
         ) from exc
     except (APITimeoutError, APIConnectionError) as exc:
         raise AIServiceError(

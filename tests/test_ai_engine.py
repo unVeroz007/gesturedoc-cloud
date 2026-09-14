@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 import ai_engine
-from ai_engine import AIServiceError, generate_health_info, validate_ai_payload
+from ai_engine import AIServiceError, _make_client, generate_health_info, validate_ai_payload
 
 
 def valid_payload():
@@ -18,6 +18,19 @@ def valid_payload():
 
 def test_payload_validation_accepts_exact_plain_schema():
     assert validate_ai_payload(valid_payload()) == valid_payload()
+
+
+@pytest.mark.parametrize("api_key", ["", "gsk_your_key_here", "gsk_terpotong"])
+def test_client_rejects_missing_placeholder_or_truncated_key_before_request(monkeypatch, api_key):
+    monkeypatch.setattr(
+        ai_engine,
+        "get_setting",
+        lambda name, default="": api_key if name == "GROQ_API_KEY" else default,
+    )
+    with pytest.raises(AIServiceError) as caught:
+        _make_client()
+    assert caught.value.category == "configuration_error"
+    assert "belum valid" in caught.value.public_message
 
 
 @pytest.mark.parametrize(
